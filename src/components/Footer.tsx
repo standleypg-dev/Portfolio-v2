@@ -78,7 +78,10 @@ const Footer = () => {
               </span>
               <span className="hidden sm:inline mx-2">•</span>
               <a
-                href="https://github.com/standleypg/portfolio"
+                href={
+                  personalInfo.socials.find((s) => s.platform === "GitHub")
+                    ?.url + "/Portfolio-v2"
+                }
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-400 hover:text-blue-300 transition-colors duration-300 flex items-center"
