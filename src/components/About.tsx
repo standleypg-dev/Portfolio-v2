@@ -1,4 +1,4 @@
-import { Code, CodeIcon, Compass, Gamepad2, Music } from "lucide-react";
+import { Code, CodeIcon, Compass, Gamepad2, Music, Server } from "lucide-react";
 import { personalInfo } from "../data/personalInfo";
 import { ToWords } from "to-words";
 
@@ -114,6 +114,8 @@ const About = () => {
                           IconComponent = Compass;
                         } else if (hobby.category === "Gaming") {
                           IconComponent = Gamepad2;
+                        } else if (hobby.category === "Self-Hosting") {
+                          IconComponent = Server;
                         } else {
                           IconComponent = Music;
                         }

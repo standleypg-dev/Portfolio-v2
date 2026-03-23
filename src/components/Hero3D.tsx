@@ -1,4 +1,4 @@
-import { useRef, useMemo, useEffect } from "react";
+import { useRef, useMemo, useEffect, useState, useCallback } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { useTheme } from "../context/ThemeContext";
@@ -23,9 +23,7 @@ function BackgroundStars() {
       <bufferGeometry>
         <bufferAttribute
           attach="attributes-position"
-          count={positions.length / 3}
-          array={positions}
-          itemSize={3}
+          args={[positions, 3]}
         />
       </bufferGeometry>
       <pointsMaterial
@@ -43,6 +41,7 @@ function Galaxy() {
   const groupRef = useRef<Group>(null);
   const targetRotation = useRef({ x: 0, y: 0 });
   const currentRotation = useRef({ x: 0, y: 0 });
+  const accumulatedY = useRef(0);
 
   useEffect(() => {
     const handleMouseMove = (event: MouseEvent) => {
@@ -57,10 +56,10 @@ function Galaxy() {
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
-  useFrame((state) => {
+  useFrame((_state, delta) => {
     if (groupRef.current) {
-      // Base rotation speed
-      const baseRotationY = state.clock.getElapsedTime() * 0.03;
+      accumulatedY.current += Math.min(delta, 0.05) * 0.03;
+      const baseRotationY = accumulatedY.current;
 
       // Even smoother interpolation with much lower factor
       const smoothFactor = 0.008;
@@ -89,8 +88,42 @@ function Galaxy() {
 }
 
 const Hero3D = () => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [frameloop, setFrameloop] = useState<"always" | "never">("always");
+  const isInViewport = useRef(true);
+  const isTabVisible = useRef(true);
+
+  const updateFrameloop = useCallback(() => {
+    setFrameloop(isInViewport.current && isTabVisible.current ? "always" : "never");
+  }, []);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        isInViewport.current = entry.isIntersecting;
+        updateFrameloop();
+      },
+      { threshold: 0 }
+    );
+
+    if (containerRef.current) observer.observe(containerRef.current);
+
+    const handleVisibilityChange = () => {
+      isTabVisible.current = document.visibilityState === "visible";
+      updateFrameloop();
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      observer.disconnect();
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [updateFrameloop]);
+
   return (
     <motion.div
+      ref={containerRef}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 1.5, ease: "easeOut" }}
@@ -100,6 +133,7 @@ const Hero3D = () => {
       <Canvas
         camera={{ position: [0, 0, 15], fov: 60 }}
         style={{ background: "transparent" }}
+        frameloop={frameloop}
       >
         <ambientLight intensity={0.5} />
         <pointLight position={[10, 10, 10]} intensity={1} />

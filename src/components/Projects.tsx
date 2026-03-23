@@ -3,21 +3,24 @@ import { ExternalLink } from "lucide-react";
 import { projects } from "../data/projects";
 import GitHubIcon from "./icons/GitHub";
 
-type FilterType = "all" | ".NET Core" | "Angular" | "API" | "Other";
+type FilterType = "All" | ".NET" | "Other";
 
 const Projects = () => {
-  const [activeFilter, setActiveFilter] = useState<FilterType>("all");
+  const [activeFilter, setActiveFilter] = useState<FilterType>("All");
 
   const filterButtons: FilterType[] = [
-    "all",
-    ".NET Core",
-    "Angular",
-    "API",
+    "All",
+    ".NET",
     "Other",
   ];
 
+  const specificFilters: FilterType[] = [".NET"];
+
   const filteredProjects = projects.filter((project) => {
-    if (activeFilter === "all") return true;
+    if (activeFilter === "All") return true;
+    if (activeFilter === "Other") {
+      return !specificFilters.some((f) => project.technologies.includes(f));
+    }
     return project.technologies.includes(activeFilter);
   });
 

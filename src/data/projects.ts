@@ -20,34 +20,34 @@ export const projects: Project[] = [
     liveUrl: null,
   },
   {
-    project: "e-Commerce Website",
-    url: "https://github.com/standleypg/commercejs",
+    project: "Modular Clean Architecture Template",
+    url: "https://github.com/standleypg/Modular-Clean-Architecture-with-Service-Layer-Pattern-and-OData-Endpoints",
     description:
-      "A website that uses the Commerce.js API to create an e-Commerce website. This is a fun project that I use to learn about the Commerce.js API and Stripe payments Gateway.",
+      "A comprehensive .NET template implementing Modular Clean Architecture with OData integration and .NET Aspire for orchestration. Serves as a starting point and best-practice reference for building scalable, maintainable .NET applications with advanced querying and orchestration capabilities.",
     shortDescription:
-      "Website that uses the Commerce.js API to create an e-Commerce website.",
-    technologies: "Angular, Commerce.js, Stripe, JavaScript",
-    liveUrl: "https://commerce-demo.standleypg.com",
-  },
-  {
-    project: "Hikvision Face Recognition",
-    url: "https://github.com/standleypg/FRHik",
-    description:
-      "A C# service that uses the Hikvision Face Recognition API to detect faces for building access control. This project is mainly used to learn about the Hikvision Face Recognition API and integrated with native c++ SDK libraries.",
-    shortDescription:
-      "C# service that uses the Hikvision API and SDK to detect faces for building access control.",
+      "Modular Clean Architecture .NET template with OData and .NET Aspire orchestration.",
     technologies:
-      ".NET Core, Hikvision Face Recognition API, Hikvision SDK, C#",
+      ".NET Core, Clean Architecture, .NET Aspire, OData, MediatR, FluentValidation, Swagger, Serilog, Docker, PostgreSQL, Entity Framework Core",
     liveUrl: null,
   },
   {
-    project: ".Net Clean Architecture Template",
-    url: "https://github.com/standleypg/Clean-Architecture-.Net-API",
+    project: "GenItEasy",
+    url: "https://github.com/standleypg/GenItEasy",
     description:
-      "A .Net Core API template that uses Clean Architecture. This project is mainly used to learn about Clean Architecture and how to implement it in .Net Core.",
-    shortDescription: ".Net Core API template that uses Clean Architecture.",
-    technologies:
-      ".NET Core, Clean Architecture, MediatR, FluentValidation, AutoMapper, Swagger, Serilog, Docker, PostgreSQL, Entity Framework Core, NUnit, Moq, Mapster, ErrorOr",
+      "A .NET library and CLI tool for generating TypeScript type definitions from C# assemblies. Bridges the gap between .NET backends and TypeScript frontends by automating type generation, reducing manual effort and type mismatch errors.",
+    shortDescription:
+      ".NET library and CLI tool for generating TypeScript type definitions from C# assemblies.",
+    technologies: ".NET Core, C#, TypeScript, CLI, Code Generation",
+    liveUrl: null,
+  },
+  {
+    project: "Jellyfin Automated Media Stack",
+    url: "https://github.com/standleypg/Jellyfin-Automated-Media-Stack",
+    description:
+      "A fully automated self-hosted media server stack running on Docker. Request a movie or TV show once and the system automatically finds, downloads, adds subtitles, and streams it - a personal home media server for streaming.",
+    shortDescription:
+      "Fully automated self-hosted media server stack on Docker with Jellyfin.",
+    technologies: "Docker, Jellyfin, Linux, Self-Hosting, Home Server",
     liveUrl: null,
   },
 ];
