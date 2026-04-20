@@ -1,0 +1,54 @@
+name: Deploy
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+env:
+  DEPLOY_PATH: /home/standleypg/personal-website
+  IMAGE_NAME: personal-website
+  CONTAINER_NAME: personal-website
+  HOST_PORT: 3080
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, Linux, X64]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Sync build artifacts to deploy path
+        run: |
+          mkdir -p "$DEPLOY_PATH"
+          rsync -a --delete dist/ "$DEPLOY_PATH/"
+          cp Dockerfile "$DEPLOY_PATH/Dockerfile"
+
+      - name: Build Docker image
+        working-directory: ${{ env.DEPLOY_PATH }}
+        run: docker build -t "$IMAGE_NAME:latest" .
+
+      - name: Restart container
+        run: |
+          docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
+          docker run -d \
+            --name "$CONTAINER_NAME" \
+            --restart unless-stopped \
+            -p ${HOST_PORT}:80 \
+            "$IMAGE_NAME:latest"
+
+      - name: Prune dangling images
+        run: docker image prune -f
