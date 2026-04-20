@@ -19,26 +19,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Build
-        run: bun run build
-
-      - name: Sync build artifacts to deploy path
+      - name: Sync source to deploy path
         run: |
           mkdir -p "$DEPLOY_PATH"
-          rsync -a --delete dist/ "$DEPLOY_PATH/"
-          cp Dockerfile "$DEPLOY_PATH/Dockerfile"
+          rsync -a --delete \
+            --exclude=node_modules \
+            --exclude=.git \
+            --exclude=dist \
+            ./ "$DEPLOY_PATH/"
 
       - name: Build Docker image
         working-directory: ${{ env.DEPLOY_PATH }}
-        run: docker build -t "$IMAGE_NAME:latest" .
+        run: docker build --pull -t "$IMAGE_NAME:latest" .
 
       - name: Restart container
         run: |
