@@ -64,7 +64,7 @@ export const personalInfo: PersonalInfo = {
   },
   location: "Kuala Lumpur, Malaysia",
   email: "standleypg@gmail.com",
-  avatar: "images/me-face.png",
+  avatar: "images/profile.jpeg",
   hobbies: [
     {
       category: "Outdoor",
@@ -93,6 +93,6 @@ export const personalInfo: PersonalInfo = {
       platform: "LinkedIn",
       url: "https://linkedin.com/in/standleypg",
       icon: "Linkedin",
-    }
+    },
   ],
 };
