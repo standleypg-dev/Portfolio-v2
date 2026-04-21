@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { Linkedin, FileText, ChevronDown } from "lucide-react";
+import { FileText, ChevronDown } from "lucide-react";
 import { personalInfo } from "../data/personalInfo";
 import GitHubIcon from "./icons/GitHub";
+import LinkedInIcon from "./icons/LinkedInIcon";
 
 const Hero = () => {
   const [typedText, setTypedText] = useState("");
@@ -27,7 +28,7 @@ const Hero = () => {
         if (typedText.length === 0) {
           setIsDeleting(false);
           setCurrentTextIndex(
-            (currentTextIndex + 1) % personalInfo.roles.length
+            (currentTextIndex + 1) % personalInfo.roles.length,
           );
         }
       }
@@ -38,7 +39,7 @@ const Hero = () => {
 
   const handleNavClick = (
     e: React.MouseEvent<HTMLAnchorElement>,
-    href: string
+    href: string,
   ) => {
     e.preventDefault();
     const element = document.querySelector(href);
@@ -55,7 +56,7 @@ const Hero = () => {
     >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col items-center text-center">
-          <div className="w-48 h-48 md:w-56 md:h-56 rounded-full overflow-hidden border-4 border-white dark:border-gray-800 shadow-xl mb-8">
+          <div className="w-36 h-36 sm:w-48 sm:h-48 md:w-56 md:h-56 rounded-full overflow-hidden border-4 border-white dark:border-gray-800 shadow-xl mb-6 sm:mb-8">
             <img
               src={personalInfo.avatar}
               alt={personalInfo.name}
@@ -63,26 +64,26 @@ const Hero = () => {
             />
           </div>
 
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-4">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight text-gray-900 dark:text-white mb-3 sm:mb-4">
             Hello, I'm{" "}
             <span className="bg-gradient-to-r from-blue-600 to-teal-500 bg-clip-text text-transparent">
               {personalInfo.name}
             </span>
           </h1>
 
-          <div className="h-8 md:h-10 mb-6">
-            <h2 className="text-xl md:text-2xl lg:text-3xl font-medium text-gray-700 dark:text-gray-300">
+          <div className="h-8 md:h-10 mb-4 sm:mb-6">
+            <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-medium text-gray-700 dark:text-gray-300">
               {typedText}
               <span className="animate-blink">|</span>
             </h2>
           </div>
 
-          <p className="max-w-2xl text-lg text-gray-600 dark:text-gray-400 mb-10">
+          <p className="max-w-2xl text-base sm:text-lg text-gray-600 dark:text-gray-400 mb-8 sm:mb-10">
             I enjoy seeking out creative solutions to complex problems and
             building things that empower others to do the same.
           </p>
 
-          <div className="flex flex-wrap justify-center gap-4 mb-12">
+          <div className="flex flex-wrap justify-center gap-3 sm:gap-4 mb-8 sm:mb-12">
             <a
               href="#contact"
               onClick={(e) => handleNavClick(e, "#contact")}
@@ -99,7 +100,7 @@ const Hero = () => {
             </a>
           </div>
 
-          <div className="flex space-x-6 mb-12">
+          <div className="flex space-x-6 mb-8 sm:mb-12">
             {personalInfo.socials.map((social) => (
               <a
                 key={social.platform}
@@ -110,7 +111,7 @@ const Hero = () => {
                 aria-label={`${social.platform} Profile`}
               >
                 {social.platform === "GitHub" && <GitHubIcon size={24} />}
-                {social.platform === "LinkedIn" && <Linkedin size={24} />}
+                {social.platform === "LinkedIn" && <LinkedInIcon size={24} />}
                 {social.platform === "Resume" && <FileText size={24} />}
               </a>
             ))}

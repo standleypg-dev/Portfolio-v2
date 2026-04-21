@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Menu, X, Moon, Sun } from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
 import { personalInfo } from "../data/personalInfo";
@@ -6,18 +6,26 @@ import { personalInfo } from "../data/personalInfo";
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const lastScrollY = useRef(0);
   const { isDarkMode, toggleTheme } = useTheme();
 
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 50) {
-        setScrolled(true);
-      } else {
-        setScrolled(false);
+      const y = window.scrollY;
+      setScrolled(y > 50);
+      const delta = y - lastScrollY.current;
+      // Ignore tiny jitter from momentum / rubber-banding on mobile.
+      if (Math.abs(delta) < 6) return;
+      if (y > 80 && delta > 0) {
+        setHidden(true);
+      } else if (delta < 0) {
+        setHidden(false);
       }
+      lastScrollY.current = y;
     };
 
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -48,6 +56,8 @@ const Navbar = () => {
   return (
     <nav
       className={`fixed w-full z-50 transition-all duration-300 ${
+        hidden && !isOpen ? "-translate-y-full" : "translate-y-0"
+      } ${
         scrolled
           ? "bg-white/90 dark:bg-gray-900/90 backdrop-blur-md shadow-md py-2"
           : "bg-transparent py-4"

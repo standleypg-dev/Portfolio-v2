@@ -1,7 +1,7 @@
 import React from "react";
-import { Linkedin } from "lucide-react";
 import GitHubIcon from "./GitHub";
 import TwitterIcon from "./TwitterIcon";
+import LinkedInIcon from "./LinkedInIcon";
 
 interface SocialIconProps {
   platform: string;
@@ -13,7 +13,7 @@ const SocialIcon: React.FC<SocialIconProps> = ({ platform, size = 20 }) => {
     case "GitHub":
       return <GitHubIcon size={size} />;
     case "LinkedIn":
-      return <Linkedin size={size} />;
+      return <LinkedInIcon size={size} />;
     case "Twitter":
       return <TwitterIcon size={size} />;
     default:
