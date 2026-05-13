@@ -34,7 +34,7 @@ const Work = () => {
                 key={`${work.project}-${index}`}
                 className="bg-gray-50 dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden"
               >
-                <div className="h-48 overflow-hidden">
+                <div className="h-56 overflow-hidden">
                   <img
                     src={work.imageUrl}
                     alt={work.project}
