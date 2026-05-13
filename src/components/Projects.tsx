@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Lock } from "lucide-react";
 import { projects } from "../data/projects";
 import GitHubIcon from "./icons/GitHub";
+import ProjectImageCarousel from "./ProjectImageCarousel";
 
 type FilterType = "All" | ".NET" | "Other";
 
@@ -58,8 +59,14 @@ const Projects = () => {
           {filteredProjects.map((project, index) => (
             <div
               key={`${project.project}-${index}`}
-              className="bg-white dark:bg-gray-900 rounded-xl shadow-lg overflow-hidden transition-transform duration-300 hover:-translate-y-2"
+              className="bg-white dark:bg-gray-900 rounded-xl shadow-lg overflow-hidden transition-transform duration-300 hover:-translate-y-2 flex flex-col"
             >
+              {project.images && project.images.length > 0 && (
+                <ProjectImageCarousel
+                  images={project.images}
+                  alt={project.project}
+                />
+              )}
               <div className="p-6">
                 <h3 className="text-xl font-bold mb-2 text-gray-900 dark:text-white">
                   {project.project}
@@ -78,15 +85,22 @@ const Projects = () => {
                   ))}
                 </div>
                 <div className="flex gap-4">
-                  <a
-                    href={project.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors duration-300"
-                  >
-                    <GitHubIcon size={18} className="mr-1" />
-                    <span>Code</span>
-                  </a>
+                  {project.url ? (
+                    <a
+                      href={project.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors duration-300"
+                    >
+                      <GitHubIcon size={18} className="mr-1" />
+                      <span>Code</span>
+                    </a>
+                  ) : project.isPrivate ? (
+                    <span className="flex items-center text-gray-500 dark:text-gray-400">
+                      <Lock size={18} className="mr-1" />
+                      <span>Private repo</span>
+                    </span>
+                  ) : null}
                   {project.liveUrl && (
                     <a
                       href={project.liveUrl}
