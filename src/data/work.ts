@@ -4,10 +4,10 @@ interface WorkExperience {
   company: string;
   clientCompany?: string;
   description: string;
-  imageUrl: string;
   companyLink: string;
   clientCompanyLink?: string;
   projectLink?: string;
+  highlights?: string[];
   responsibilities?: string[];
 }
 
@@ -21,11 +21,14 @@ export const workExperience: WorkExperience[] = [
     clientCompany: "Trintech",
     description:
       "Full-stack engineer on a financial reconciliation platform processing billions of transaction records annually. Built and delivered features across ASP.NET Core and Aurelia, modernized core dependencies, enhanced async workflows with Azure Service Bus, extended real-time notifications via SignalR, and managed cloud infrastructure using Bicep, Container Apps, and CI/CD with Feature Flags for zero-downtime deployments.",
-    imageUrl:
-      "https://www.trintech.com/wp-content/uploads/2022/12/pexels-karolina-grabowska-4491461-1920x1280.jpg",
     companyLink: "https://99x.io/malaysia",
     clientCompanyLink: "https://www.trintech.com/",
     projectLink: "https://www.trintech.com/adra/",
+    highlights: [
+      "Ships features on a platform that processes billions of transaction records a year, across ASP.NET Core and Aurelia.",
+      "Cut critical database query times from over 60 seconds to under 30 through query-plan analysis, strategic indexing, and EF Core LINQ optimization.",
+      "Zero-downtime deployments via Azure Feature Flags, ephemeral PR environments on Container Apps, and Bicep infrastructure-as-code.",
+    ],
     responsibilities: [
       "Migrated enterprise reconciliation platform from Autofac to native .NET DI and AutoMapper to Mapperly, modernizing from legacy dependencies and eliminating future licensing costs.",
       "Resolved critical performance bottlenecks by reducing database query times from over 60 seconds to under 30 seconds through SQL Server query plan analysis, strategic indexing, and EF Core LINQ optimization using Extended Events.",
@@ -48,10 +51,14 @@ export const workExperience: WorkExperience[] = [
     clientCompany: "Optimar",
     description:
       "Developed scalable IoT solutions for industrial automation, focusing on real-time telemetry and analytics using Azure cloud services. Built high-reliability IoT pipelines processing high volumes of daily events from thousands of devices across Optimar's global fish processing operations.",
-    imageUrl: "images/optimar-commander.jpg",
     companyLink: "https://99x.io/malaysia",
     clientCompanyLink: "https://www.optimar.no/",
-    projectLink: "https://optimarglobal.com/en/machines/software-and-control/commander",
+    projectLink:
+      "https://optimarglobal.com/en/machines/software-and-control/commander",
+    highlights: [
+      "Built a high-reliability IoT pipeline handling high volumes of daily events from thousands of devices across global fish-processing operations.",
+      "Architected microservices on Azure Functions, IoT Hub, Event Hub, and Redis for real-time industrial analytics.",
+    ],
     responsibilities: [
       "Built and maintained high-reliability IoT pipeline processing high volumes of daily events from thousands of devices.",
       "Architected microservices using Azure Functions, IoT Hub, Event Hub, and Redis for real-time analytics.",
@@ -67,8 +74,10 @@ export const workExperience: WorkExperience[] = [
     company: "Impact Business Solutions",
     description:
       "Led development of integrated smart city solutions including operation centers, smart parking systems, and inventory management platforms for public sector clients in Sarawak.",
-    imageUrl: "images/sioc.jpg",
     companyLink: "https://impact-multimedia.com/ibs/",
+    highlights: [
+      "Led full-stack development of smart city platforms (operations centers, smart parking, inventory management) for public sector clients in Sarawak.",
+    ],
     responsibilities: [
       "Collaborated with a development team in full-stack application development using .NET, Angular, and Blazor.",
       "Successfully integrated multiple third-party APIs and SDKs for comprehensive smart city solutions.",
@@ -82,8 +91,10 @@ export const workExperience: WorkExperience[] = [
     company: "Sarawak Information Systems",
     description:
       "The Internet in a Box project uses a Raspberry Pi to provide offline access to digital content and services, bringing educational resources to disconnected schools in rural areas in Sarawak.",
-    imageUrl: "images/rpi.webp",
     companyLink: "https://www.sains.com.my/",
+    highlights: [
+      "Brought offline educational content to disconnected rural schools via Raspberry Pi edge devices speaking custom communication protocols.",
+    ],
     responsibilities: [
       "Developed robust backend services for IoT edge device communication using custom protocols.",
       "Built scalable upstream/downstream data exchange services.",
@@ -97,9 +108,10 @@ export const workExperience: WorkExperience[] = [
     company: "Sarawak Information Systems",
     description:
       "The Building Security Management System integrates Hikvision's and Suprema's devices and SDK to centralize control and monitoring of security in a building. It efficiently manages video surveillance, access control, and alarm systems.",
-    imageUrl:
-      "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
     companyLink: "https://www.sains.com.my/",
+    highlights: [
+      "Centralized video surveillance, access control, and alarm systems by integrating Hikvision and Suprema device SDKs.",
+    ],
     responsibilities: [
       "Integrated Hikvision and Suprema SDKs for comprehensive security and access control systems.",
       "Built scalable upstream/downstream data exchange services.",

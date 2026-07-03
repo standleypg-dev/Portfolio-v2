@@ -50,7 +50,6 @@ const Navbar = () => {
     { name: "About", href: "#about" },
     { name: "Projects", href: "#projects" },
     { name: "Work", href: "#work" },
-    { name: "Testimonials", href: "#testimonials" },
     { name: "Contact", href: "#contact" },
   ];
 
@@ -70,7 +69,7 @@ const Navbar = () => {
             <a
               href="#home"
               onClick={(e) => handleNavClick(e, "#home")}
-              className="text-xl md:text-2xl font-bold bg-gradient-to-r from-blue-600 to-teal-500 bg-clip-text text-transparent"
+              className="font-display text-xl md:text-2xl font-semibold tracking-tight text-gray-900 dark:text-white"
             >
               {personalInfo.name}
             </a>

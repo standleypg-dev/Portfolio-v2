@@ -1,105 +1,85 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTheme } from "../context/ThemeContext";
 
 interface Sparkle {
   x: number;
   y: number;
   size: number;
-  color: string;
   id: number;
 }
 
-const MouseSparkles: React.FC = () => {
+// Throttled emission keeps the effect a quiet shimmer instead of a comet
+// trail, and bounds how much state churn a fast mouse can cause.
+const EMIT_INTERVAL_MS = 50;
+const LIFETIME_MS = 700;
+const MAX_SPARKLES = 40;
+
+const MouseSparkles = () => {
   const [sparkles, setSparkles] = useState<Sparkle[]>([]);
-  const [isEnabled] = useState(true);
   const { isDarkMode } = useTheme();
-  const heroRef = useRef<HTMLElement | null>(null);
-
-  const createSparkle = useCallback(
-    (x: number, y: number) => {
-      const hue = isDarkMode ? "210" : "200";
-      const saturation = isDarkMode ? "100%" : "70%";
-      const lightness = isDarkMode ? "60%" : "50%";
-      const alpha = isDarkMode ? "0.6" : "0.4";
-
-      return {
-        id: Date.now() + Math.random(),
-        x,
-        y,
-        size: 0.5 + Math.random() * 0.3,
-        color: `hsla(${hue}, ${saturation}, ${lightness}, ${alpha})`,
-      };
-    },
-    [isDarkMode]
-  );
+  const lastEmit = useRef(0);
 
   useEffect(() => {
-    if (!isEnabled) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-    // Get reference to hero section
-    heroRef.current = document.querySelector("#home");
+    const hero = document.querySelector("#home");
 
     const handleMove = (e: MouseEvent | TouchEvent) => {
-      const event = e instanceof MouseEvent ? e : e.touches[0];
-      // The container is fixed, so viewport coordinates are what we need.
-      const x = event.clientX;
-      const y = event.clientY;
+      const point = e instanceof MouseEvent ? e : e.touches[0];
+      if (!point) return;
 
-      // Check if mouse is within hero section bounds
-      if (heroRef.current) {
-        const heroRect = heroRef.current.getBoundingClientRect();
-        const isInHero =
-          event.clientY >= heroRect.top &&
-          event.clientY <= heroRect.bottom &&
-          event.clientX >= heroRect.left &&
-          event.clientX <= heroRect.right;
+      const now = performance.now();
+      if (now - lastEmit.current < EMIT_INTERVAL_MS) return;
 
-        if (isInHero) {
-          const newSparkles = Array.from({ length: 2 }, () =>
-            createSparkle(
-              x + (Math.random() - 0.5) * 15,
-              y + (Math.random() - 0.5) * 15
-            )
-          );
-
-          setSparkles((prev) => [...prev, ...newSparkles]);
-
-          setTimeout(() => {
-            setSparkles((prev) =>
-              prev.filter(
-                (sparkle) => !newSparkles.find((s) => s.id === sparkle.id)
-              )
-            );
-          }, 800);
-        }
+      if (hero) {
+        const rect = hero.getBoundingClientRect();
+        const inHero =
+          point.clientY >= rect.top &&
+          point.clientY <= rect.bottom &&
+          point.clientX >= rect.left &&
+          point.clientX <= rect.right;
+        if (!inHero) return;
       }
+
+      lastEmit.current = now;
+      const sparkle: Sparkle = {
+        id: now + Math.random(),
+        x: point.clientX + (Math.random() - 0.5) * 14,
+        y: point.clientY + (Math.random() - 0.5) * 14,
+        size: 3 + Math.random() * 3,
+      };
+
+      setSparkles((prev) => [...prev.slice(-(MAX_SPARKLES - 1)), sparkle]);
+      window.setTimeout(() => {
+        setSparkles((prev) => prev.filter((s) => s.id !== sparkle.id));
+      }, LIFETIME_MS);
     };
 
-    window.addEventListener("mousemove", handleMove);
-    window.addEventListener("touchmove", handleMove);
-
+    window.addEventListener("mousemove", handleMove, { passive: true });
+    window.addEventListener("touchmove", handleMove, { passive: true });
     return () => {
       window.removeEventListener("mousemove", handleMove);
       window.removeEventListener("touchmove", handleMove);
     };
-  }, [isEnabled, createSparkle]);
+  }, []);
+
+  const color = isDarkMode
+    ? "rgba(147, 197, 253, 0.7)"
+    : "rgba(37, 99, 235, 0.45)";
 
   return (
-    <div className="pointer-events-none fixed inset-0 z-50">
+    <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-40">
       {sparkles.map((sparkle) => (
         <div
           key={sparkle.id}
-          className="absolute animate-sparkle"
+          className="absolute animate-sparkle rounded-full"
           style={{
             left: sparkle.x,
             top: sparkle.y,
-            width: `${sparkle.size}rem`,
-            height: `${sparkle.size}rem`,
-            backgroundColor: sparkle.color,
-            boxShadow: `0 0 ${sparkle.size * 4}px ${sparkle.color}`,
-            borderRadius: "50%",
-            transform: "translate(-50%, -50%)",
+            width: sparkle.size,
+            height: sparkle.size,
+            backgroundColor: color,
+            boxShadow: `0 0 ${sparkle.size * 2}px ${color}`,
           }}
         />
       ))}

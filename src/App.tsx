@@ -1,12 +1,7 @@
-import { lazy, Suspense } from "react";
 import { motion } from "framer-motion";
 import { ThemeProvider } from "./context/ThemeContext";
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
-
-// three.js is by far the heaviest dependency; keep it out of the main bundle
-// so the page becomes interactive before the galaxy loads.
-const Hero3D = lazy(() => import("./components/Hero3D"));
 import About from "./components/About";
 import Projects from "./components/Projects";
 import Work from "./components/Work";
@@ -44,12 +39,7 @@ function App() {
         <MouseSparkles />
         <Navbar />
         <main>
-          <div className="relative min-h-screen bg-gradient-to-b from-white via-blue-50 to-blue-100 dark:from-gray-900 dark:via-blue-900/10 dark:to-gray-800 overflow-hidden">
-            <Suspense fallback={null}>
-              <Hero3D />
-            </Suspense>
-            <Hero />
-          </div>
+          <Hero />
           <RevealSection>
             <About />
           </RevealSection>

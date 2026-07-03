@@ -35,11 +35,11 @@ const ProjectLightbox = ({ images, alt, startIndex, onClose }: Props) => {
   const handleTransitionEnd = (e: TransitionEvent<HTMLDivElement>) => {
     if (e.propertyName !== "transform") return;
     if (trackIndex === N + 1) {
-      // Slid into first_clone — snap back to the real first image
+      // Slid into first_clone; snap back to the real first image
       setWithTransition(false);
       setTrackIndex(1);
     } else if (trackIndex === 0) {
-      // Slid into last_clone — snap back to the real last image
+      // Slid into last_clone; snap back to the real last image
       setWithTransition(false);
       setTrackIndex(N);
     }
