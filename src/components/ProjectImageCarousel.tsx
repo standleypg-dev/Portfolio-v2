@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import ProjectLightbox from "./ProjectLightbox";
+import type { ProjectImage } from "../data/projects";
 
 interface Props {
-  images: string[];
+  images: ProjectImage[];
   alt: string;
 }
 
@@ -13,53 +14,27 @@ const ProjectImageCarousel = ({ images, alt }: Props) => {
   const [index, setIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-  const [orientations, setOrientations] = useState<Record<string, "portrait" | "landscape">>({});
 
-  useEffect(() => {
-    let cancelled = false;
-    images.forEach((src) => {
-      const img = new Image();
-      img.onload = () => {
-        if (cancelled) return;
-        setOrientations((prev) => ({
-          ...prev,
-          [src]: img.naturalHeight > img.naturalWidth ? "portrait" : "landscape",
-        }));
-      };
-      img.src = src;
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [images]);
-
-  const slides = useMemo<string[][]>(() => {
-    const result: string[][] = [];
+  // Orientation is known from the data, so consecutive portrait shots can be
+  // paired up front; no need to preload every image to measure it.
+  const slides = useMemo<ProjectImage[][]>(() => {
+    const result: ProjectImage[][] = [];
     let i = 0;
     while (i < images.length) {
-      const src = images[i];
-      const isPortrait = orientations[src] === "portrait";
-      const next = images[i + 1];
-      const nextIsPortrait = next && orientations[next] === "portrait";
-      if (isPortrait && nextIsPortrait) {
-        result.push([src, next]);
+      if (images[i].portrait && images[i + 1]?.portrait) {
+        result.push([images[i], images[i + 1]]);
         i += 2;
       } else {
-        result.push([src]);
+        result.push([images[i]]);
         i += 1;
       }
     }
     return result;
-  }, [images, orientations]);
-
-  useEffect(() => {
-    if (index >= slides.length && slides.length > 0) {
-      setIndex(0);
-    }
-  }, [slides.length, index]);
+  }, [images]);
 
   useEffect(() => {
     if (slides.length <= 1 || isPaused || lightboxIndex !== null) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const id = window.setInterval(() => {
       setIndex((i) => (i + 1) % slides.length);
     }, AUTO_ADVANCE_MS);
@@ -68,31 +43,31 @@ const ProjectImageCarousel = ({ images, alt }: Props) => {
 
   if (slides.length === 0) return null;
 
-  const goPrev = () =>
-    setIndex((i) => (i - 1 + slides.length) % slides.length);
+  const goPrev = () => setIndex((i) => (i - 1 + slides.length) % slides.length);
   const goNext = () => setIndex((i) => (i + 1) % slides.length);
 
   return (
     <div
-      className="relative h-56 overflow-hidden bg-white dark:bg-gray-900"
+      className="relative h-64 overflow-hidden rounded-xl bg-gray-100 ring-1 ring-gray-900/10 dark:bg-gray-800/60 dark:ring-white/10 sm:h-72"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
       {slides.map((slide, i) => (
         <div
           key={i}
-          className={`absolute inset-0 flex items-center justify-center gap-2 p-2 transition-opacity duration-700 ${
+          className={`absolute inset-0 flex items-center justify-center gap-2 p-3 transition-opacity duration-700 ${
             i === index ? "opacity-100" : "opacity-0 pointer-events-none"
           }`}
         >
-          {slide.map((src) => {
-            const globalIndex = images.indexOf(src);
+          {slide.map((image) => {
+            const globalIndex = images.indexOf(image);
             return (
               <img
-                key={src}
-                src={src}
+                key={image.src}
+                src={image.src}
                 alt={`${alt} screenshot ${globalIndex + 1}`}
                 loading="lazy"
+                decoding="async"
                 onClick={() => setLightboxIndex(globalIndex)}
                 className="h-full max-w-full cursor-zoom-in object-contain"
               />
@@ -138,7 +113,7 @@ const ProjectImageCarousel = ({ images, alt }: Props) => {
 
       {lightboxIndex !== null && (
         <ProjectLightbox
-          images={images}
+          images={images.map((image) => image.src)}
           alt={alt}
           startIndex={lightboxIndex}
           onClose={() => setLightboxIndex(null)}

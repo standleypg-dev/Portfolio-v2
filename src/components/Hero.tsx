@@ -1,135 +1,119 @@
-import { useState, useEffect } from "react";
-import { FileText, ChevronDown } from "lucide-react";
+import { lazy, Suspense } from "react";
+import { ArrowRight } from "lucide-react";
 import { personalInfo } from "../data/personalInfo";
 import GitHubIcon from "./icons/GitHub";
 import LinkedInIcon from "./icons/LinkedInIcon";
+import { scrollToSection } from "../utils/scroll";
+
+// three.js is by far the heaviest dependency; keep it out of the main bundle
+// so the page becomes interactive before the starfield loads.
+const Hero3D = lazy(() => import("./Hero3D"));
 
 const Hero = () => {
-  const [typedText, setTypedText] = useState("");
-  const [currentTextIndex, setCurrentTextIndex] = useState(0);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [typingSpeed, setTypingSpeed] = useState(100);
-
-  useEffect(() => {
-    const text = personalInfo.roles[currentTextIndex];
-    const timeout = setTimeout(() => {
-      if (!isDeleting) {
-        setTypedText(text.substring(0, typedText.length + 1));
-        setTypingSpeed(100);
-
-        if (typedText.length === text.length) {
-          setIsDeleting(true);
-          setTypingSpeed(1000);
-        }
-      } else {
-        setTypedText(text.substring(0, typedText.length - 1));
-        setTypingSpeed(50);
-
-        if (typedText.length === 0) {
-          setIsDeleting(false);
-          setCurrentTextIndex(
-            (currentTextIndex + 1) % personalInfo.roles.length,
-          );
-        }
-      }
-    }, typingSpeed);
-
-    return () => clearTimeout(timeout);
-  }, [typedText, currentTextIndex, isDeleting, typingSpeed]);
+  const years =
+    new Date().getFullYear() -
+    personalInfo.professionalStartYear.getFullYear();
 
   const handleNavClick = (
     e: React.MouseEvent<HTMLAnchorElement>,
     href: string,
   ) => {
     e.preventDefault();
-    const element = document.querySelector(href);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
-    }
+    scrollToSection(href);
   };
 
   return (
     <section
       id="home"
-      className="min-h-screen flex items-center justify-center relative"
-      style={{ zIndex: 1 }}
+      className="relative flex min-h-svh items-center overflow-hidden bg-white dark:bg-gray-900"
     >
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col items-center text-center">
-          <div className="w-36 h-36 sm:w-48 sm:h-48 md:w-56 md:h-56 rounded-full overflow-hidden border-4 border-white dark:border-gray-800 shadow-xl mb-6 sm:mb-8">
+      <Suspense fallback={null}>
+        <Hero3D />
+      </Suspense>
+
+      {/* Soft scrim behind the text block so stars never fight the words */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_62%_55%_at_42%_48%,rgb(255_255_255/0.8),rgb(255_255_255/0.35)_55%,transparent_75%)] dark:bg-[radial-gradient(ellipse_62%_55%_at_42%_48%,rgb(17_24_39/0.85),rgb(17_24_39/0.4)_55%,transparent_75%)]"
+      />
+
+      {/* Quiet accent glow layered over the starfield */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-48 right-[-12%] h-[36rem] w-[36rem] rounded-full bg-blue-500/[0.07] blur-3xl dark:bg-blue-400/[0.08]"
+      />
+
+      <div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-4xl py-28 sm:py-32">
+          <div className="mb-10 flex items-center gap-4">
             <img
               src={personalInfo.avatar}
-              alt={personalInfo.name}
-              className="w-full h-full object-cover"
+              alt=""
+              width={56}
+              height={56}
+              fetchPriority="high"
+              className="h-14 w-14 rounded-full object-cover ring-1 ring-gray-900/10 dark:ring-white/15"
             />
+            <div>
+              <p className="font-medium text-gray-900 dark:text-white">
+                {personalInfo.name}
+              </p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                {personalInfo.title}, {personalInfo.location}
+              </p>
+            </div>
           </div>
 
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight text-gray-900 dark:text-white mb-3 sm:mb-4">
-            Hello, I'm{" "}
-            <span className="bg-gradient-to-r from-blue-600 to-teal-500 bg-clip-text text-transparent">
-              {personalInfo.name}
-            </span>
+          <h1 className="font-display text-balance text-[clamp(2.5rem,1.2rem+5vw,4.5rem)] font-semibold leading-[1.06] tracking-tight text-gray-900 dark:text-white">
+            I build software that{" "}
+            <em className="text-blue-600 dark:text-blue-400">
+              carries real load
+            </em>
+            .
           </h1>
 
-          <div className="h-8 md:h-10 mb-4 sm:mb-6">
-            <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-medium text-gray-700 dark:text-gray-300">
-              {typedText}
-              <span className="animate-blink">|</span>
-            </h2>
-          </div>
-
-          <p className="max-w-2xl text-base sm:text-lg text-gray-600 dark:text-gray-400 mb-8 sm:mb-10">
-            I enjoy seeking out creative solutions to complex problems and
-            building things that empower others to do the same.
+          <p className="mt-7 max-w-2xl text-lg leading-relaxed text-gray-600 dark:text-gray-400 sm:text-xl">
+            {years} years across .NET, React, and Azure. Currently an
+            Associate Tech Lead at 99x, building a financial reconciliation
+            platform that processes billions of transaction records a year.
           </p>
 
-          <div className="flex flex-wrap justify-center gap-3 sm:gap-4 mb-8 sm:mb-12">
-            <a
-              href="#contact"
-              onClick={(e) => handleNavClick(e, "#contact")}
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 font-medium"
-            >
-              Get in Touch
-            </a>
+          <div className="mt-11 flex flex-wrap items-center gap-x-8 gap-y-5">
             <a
               href="#projects"
               onClick={(e) => handleNavClick(e, "#projects")}
-              className="px-6 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 font-medium"
+              className="rounded-lg bg-blue-600 px-6 py-3 font-medium text-white transition-colors duration-200 hover:bg-blue-700"
             >
-              View Projects
+              View my work
             </a>
-          </div>
+            <a
+              href="#contact"
+              onClick={(e) => handleNavClick(e, "#contact")}
+              className="flex items-center gap-1.5 font-medium text-gray-900 transition-colors duration-200 hover:text-blue-600 dark:text-white dark:hover:text-blue-400"
+            >
+              Get in touch <ArrowRight size={16} aria-hidden="true" />
+            </a>
 
-          <div className="flex space-x-6 mb-8 sm:mb-12">
-            {personalInfo.socials.map((social) => (
-              <a
-                key={social.platform}
-                href={social.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors duration-300"
-                aria-label={`${social.platform} Profile`}
-              >
-                {social.platform === "GitHub" && <GitHubIcon size={24} />}
-                {social.platform === "LinkedIn" && <LinkedInIcon size={24} />}
-                {social.platform === "Resume" && <FileText size={24} />}
-              </a>
-            ))}
+            <div className="flex items-center gap-5">
+              {personalInfo.socials.map((social) => (
+                <a
+                  key={social.platform}
+                  href={social.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-500 transition-colors duration-200 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400"
+                  aria-label={`${social.platform} Profile`}
+                >
+                  {social.platform === "GitHub" && <GitHubIcon size={22} />}
+                  {social.platform === "LinkedIn" && (
+                    <LinkedInIcon size={22} />
+                  )}
+                </a>
+              ))}
+            </div>
           </div>
         </div>
       </div>
-
-      <button
-        onClick={() =>
-          document
-            .querySelector("#about")
-            ?.scrollIntoView({ behavior: "smooth" })
-        }
-        className="absolute bottom-10 left-1/2 transform -translate-x-1/2 animate-bounce text-gray-500 dark:text-gray-400"
-        aria-label="Scroll to about section"
-      >
-        <ChevronDown size={36} />
-      </button>
     </section>
   );
 };

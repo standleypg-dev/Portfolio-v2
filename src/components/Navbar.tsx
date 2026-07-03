@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Menu, X, Moon, Sun } from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
 import { personalInfo } from "../data/personalInfo";
+import { scrollToSection } from "../utils/scroll";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -25,6 +26,8 @@ const Navbar = () => {
       lastScrollY.current = y;
     };
 
+    // Sync immediately: the browser can restore a scroll position on reload.
+    handleScroll();
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -38,11 +41,8 @@ const Navbar = () => {
     href: string
   ) => {
     e.preventDefault();
-    const element = document.querySelector(href);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
-      setIsOpen(false);
-    }
+    scrollToSection(href);
+    setIsOpen(false);
   };
 
   const navItems = [
@@ -69,7 +69,7 @@ const Navbar = () => {
             <a
               href="#home"
               onClick={(e) => handleNavClick(e, "#home")}
-              className="text-xl md:text-2xl font-bold bg-gradient-to-r from-blue-600 to-teal-500 bg-clip-text text-transparent"
+              className="font-display text-xl md:text-2xl font-semibold tracking-tight text-gray-900 dark:text-white"
             >
               {personalInfo.name}
             </a>
