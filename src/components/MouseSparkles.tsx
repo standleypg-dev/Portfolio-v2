@@ -35,14 +35,16 @@ const MouseSparkles: React.FC = () => {
 
   useEffect(() => {
     if (!isEnabled) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     // Get reference to hero section
     heroRef.current = document.querySelector("#home");
 
     const handleMove = (e: MouseEvent | TouchEvent) => {
       const event = e instanceof MouseEvent ? e : e.touches[0];
+      // The container is fixed, so viewport coordinates are what we need.
       const x = event.clientX;
-      const y = event.clientY + window.scrollY;
+      const y = event.clientY;
 
       // Check if mouse is within hero section bounds
       if (heroRef.current) {

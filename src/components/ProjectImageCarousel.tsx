@@ -52,11 +52,9 @@ const ProjectImageCarousel = ({ images, alt }: Props) => {
     return result;
   }, [images, orientations]);
 
-  useEffect(() => {
-    if (index >= slides.length && slides.length > 0) {
-      setIndex(0);
-    }
-  }, [slides.length, index]);
+  // Slides regroup as image orientations load, so the stored index can go
+  // stale; derive the rendered index instead of clamping state in an effect.
+  const activeIndex = slides.length > 0 ? index % slides.length : 0;
 
   useEffect(() => {
     if (slides.length <= 1 || isPaused || lightboxIndex !== null) return;
@@ -82,7 +80,7 @@ const ProjectImageCarousel = ({ images, alt }: Props) => {
         <div
           key={i}
           className={`absolute inset-0 flex items-center justify-center gap-2 p-2 transition-opacity duration-700 ${
-            i === index ? "opacity-100" : "opacity-0 pointer-events-none"
+            i === activeIndex ? "opacity-100" : "opacity-0 pointer-events-none"
           }`}
         >
           {slide.map((src) => {
@@ -128,7 +126,7 @@ const ProjectImageCarousel = ({ images, alt }: Props) => {
                 onClick={() => setIndex(i)}
                 aria-label={`Go to slide ${i + 1}`}
                 className={`h-1.5 rounded-full transition-all ${
-                  i === index ? "w-4 bg-white" : "w-1.5 bg-white/60"
+                  i === activeIndex ? "w-4 bg-white" : "w-1.5 bg-white/60"
                 }`}
               />
             ))}

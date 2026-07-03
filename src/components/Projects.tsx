@@ -44,6 +44,7 @@ const Projects = () => {
             <button
               key={filter}
               onClick={() => setActiveFilter(filter)}
+              aria-pressed={activeFilter === filter}
               className={`py-2 px-4 rounded-full transition-all duration-300 ${
                 activeFilter === filter
                   ? "bg-blue-600 text-white shadow-md"

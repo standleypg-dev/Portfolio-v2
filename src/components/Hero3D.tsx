@@ -1,22 +1,30 @@
-import { useRef, useMemo, useEffect, useState, useCallback } from "react";
+import { useRef, useEffect, useState, useCallback } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { useTheme } from "../context/ThemeContext";
 import { motion } from "framer-motion";
 import { Group } from "three";
 
+const STAR_COUNT = 5000;
+
+const createStarPositions = (count: number) => {
+  const positions = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    positions[i * 3] = (Math.random() - 0.5) * 100;
+    positions[i * 3 + 1] = (Math.random() - 0.5) * 100;
+    positions[i * 3 + 2] = (Math.random() - 0.5) * 100;
+  }
+  return positions;
+};
+
+const starPositions = createStarPositions(STAR_COUNT);
+
+const prefersReducedMotion =
+  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
 function BackgroundStars() {
   const { isDarkMode } = useTheme();
-  const count = 5000;
-  const positions = useMemo(() => {
-    const positions = new Float32Array(count * 3);
-    for (let i = 0; i < count; i++) {
-      positions[i * 3] = (Math.random() - 0.5) * 100;
-      positions[i * 3 + 1] = (Math.random() - 0.5) * 100;
-      positions[i * 3 + 2] = (Math.random() - 0.5) * 100;
-    }
-    return positions;
-  }, []);
+  const positions = starPositions;
 
   return (
     <points>
@@ -89,11 +97,17 @@ function Galaxy() {
 
 const Hero3D = () => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [frameloop, setFrameloop] = useState<"always" | "never">("always");
+  const [frameloop, setFrameloop] = useState<"always" | "demand" | "never">(
+    prefersReducedMotion ? "demand" : "always"
+  );
   const isInViewport = useRef(true);
   const isTabVisible = useRef(true);
 
   const updateFrameloop = useCallback(() => {
+    if (prefersReducedMotion) {
+      setFrameloop("demand");
+      return;
+    }
     setFrameloop(isInViewport.current && isTabVisible.current ? "always" : "never");
   }, []);
 

@@ -24,6 +24,9 @@ const WorkModal = ({ work, onClose }: WorkModalProps) => {
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
       onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${work.project} responsibilities`}
     >
       <div
         className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col"

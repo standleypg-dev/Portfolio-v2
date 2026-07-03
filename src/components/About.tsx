@@ -46,6 +46,8 @@ const About = () => {
               <img
                 src="/images/me.jpeg"
                 alt={`${personalInfo.name} working`}
+                loading="lazy"
+                decoding="async"
                 className="w-full h-auto rounded-lg shadow-xl relative z-10"
               />
               <div className="absolute -right-4 -bottom-4 w-32 h-32 bg-blue-600 rounded-lg"></div>

@@ -27,6 +27,25 @@ html, body {
   scroll-behavior: smooth;
 }
 
+/* Keep section headings clear of the fixed navbar on anchor navigation. */
+section[id] {
+  scroll-margin-top: 5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html, body {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 body {
   min-height: 100vh;
   position: relative;

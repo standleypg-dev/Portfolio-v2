@@ -2,14 +2,59 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      // Apply the theme before first paint to avoid a light-mode flash.
+      (function () {
+        var saved = localStorage.getItem("theme");
+        var dark =
+          saved === "dark" ||
+          (!saved && window.matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) document.documentElement.classList.add("dark");
+      })();
+    </script>
     <link rel="icon" type="image/jpeg" href="/images/profile.jpeg" />
     <link rel="apple-touch-icon" href="/images/profile.jpeg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#111827" media="(prefers-color-scheme: dark)" />
     <title>Standley | Senior Software Engineer</title>
     <meta
       name="description"
       content="Standley is a senior software engineer from Malaysia with expertise in .NET, React, Angular, Aurelia, and Azure."
     />
+    <meta name="author" content="Standley Gury" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Standley Gury | Senior Software Engineer" />
+    <meta
+      property="og:description"
+      content="Senior software engineer from Malaysia specializing in .NET, React, Angular, Aurelia, and Azure."
+    />
+    <meta property="og:image" content="/images/profile.jpeg" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Standley Gury | Senior Software Engineer" />
+    <meta
+      name="twitter:description"
+      content="Senior software engineer from Malaysia specializing in .NET, React, Angular, Aurelia, and Azure."
+    />
+    <meta name="twitter:image" content="/images/profile.jpeg" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Person",
+        "name": "Standley Gury",
+        "jobTitle": "Senior Software Engineer",
+        "email": "mailto:standleypg@gmail.com",
+        "address": {
+          "@type": "PostalAddress",
+          "addressLocality": "Kuala Lumpur",
+          "addressCountry": "MY"
+        },
+        "sameAs": [
+          "https://github.com/standleypg",
+          "https://linkedin.com/in/standleypg"
+        ]
+      }
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

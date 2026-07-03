@@ -1,6 +1,7 @@
 import { Heart } from "lucide-react";
 import SocialIcon from "./icons/SocialIcon";
 import { personalInfo } from "../data/personalInfo";
+import { scrollToSection } from "../utils/scroll";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -10,10 +11,7 @@ const Footer = () => {
     href: string
   ) => {
     e.preventDefault();
-    const element = document.querySelector(href);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
-    }
+    scrollToSection(href);
   };
 
   const navLinks = [
@@ -21,6 +19,7 @@ const Footer = () => {
     { href: "#about", label: "About" },
     { href: "#projects", label: "Projects" },
     { href: "#work", label: "Work" },
+    { href: "#testimonials", label: "Testimonials" },
     { href: "#contact", label: "Contact" },
   ];
 

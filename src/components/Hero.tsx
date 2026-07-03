@@ -3,6 +3,7 @@ import { FileText, ChevronDown } from "lucide-react";
 import { personalInfo } from "../data/personalInfo";
 import GitHubIcon from "./icons/GitHub";
 import LinkedInIcon from "./icons/LinkedInIcon";
+import { scrollToSection } from "../utils/scroll";
 
 const Hero = () => {
   const [typedText, setTypedText] = useState("");
@@ -42,10 +43,7 @@ const Hero = () => {
     href: string,
   ) => {
     e.preventDefault();
-    const element = document.querySelector(href);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
-    }
+    scrollToSection(href);
   };
 
   return (
@@ -60,6 +58,9 @@ const Hero = () => {
             <img
               src={personalInfo.avatar}
               alt={personalInfo.name}
+              width={224}
+              height={224}
+              fetchPriority="high"
               className="w-full h-full object-cover"
             />
           </div>
@@ -94,7 +95,7 @@ const Hero = () => {
             <a
               href="#projects"
               onClick={(e) => handleNavClick(e, "#projects")}
-              className="px-6 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 font-medium"
+              className="px-6 py-3 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 font-medium"
             >
               View Projects
             </a>
@@ -120,11 +121,7 @@ const Hero = () => {
       </div>
 
       <button
-        onClick={() =>
-          document
-            .querySelector("#about")
-            ?.scrollIntoView({ behavior: "smooth" })
-        }
+        onClick={() => scrollToSection("#about")}
         className="absolute bottom-10 left-1/2 transform -translate-x-1/2 animate-bounce text-gray-500 dark:text-gray-400"
         aria-label="Scroll to about section"
       >
