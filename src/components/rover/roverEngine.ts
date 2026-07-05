@@ -57,7 +57,11 @@ const TAU = Math.PI * 2;
 
 const ACCEL = 560;
 const FRICTION = 2.8;
+// Rolling resistance while coasting is much lower, so the rover glides and
+// rolls downhill into dips instead of stopping dead on an incline.
+const ROLL_FRICTION = 0.8;
 const AIR_FRICTION = 1.1;
+const FLAT_GRADE = 0.06;
 const MAX_V = 220;
 // Lunar gravity: floaty ascents and descents, with slow bouncy landings.
 const FLY_GRAVITY = 60;
@@ -189,10 +193,26 @@ export function stepRover(
     state.vx += ACCEL * dt;
     state.facing = 1;
   }
-  const friction = state.onGround && !input.thrust ? FRICTION : AIR_FRICTION;
+
+  // Gravity pulls the rover along the grade it stands on, so it rolls
+  // downhill and comes to rest at the bottom of dips, not mid-slope.
+  const grade = state.onGround ? terrain.slopeAt(state.x) : 0;
+  if (state.onGround) {
+    state.vx += (grade / Math.hypot(1, grade)) * FALL_GRAVITY * dt;
+  }
+
+  const driving = input.left || input.right;
+  const friction =
+    state.onGround && !input.thrust
+      ? driving
+        ? FRICTION
+        : ROLL_FRICTION
+      : AIR_FRICTION;
   state.vx *= Math.exp(-friction * dt);
   state.vx = Math.max(-MAX_V, Math.min(MAX_V, state.vx));
-  if (Math.abs(state.vx) < 0.5 && !input.left && !input.right) state.vx = 0;
+  if (Math.abs(state.vx) < 0.5 && !driving && Math.abs(grade) < FLAT_GRADE) {
+    state.vx = 0;
+  }
 
   state.x = ((state.x + state.vx * dt) % terrain.width + terrain.width) %
     terrain.width;
