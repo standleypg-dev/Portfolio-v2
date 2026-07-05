@@ -8,6 +8,7 @@ import { scrollToSection } from "../utils/scroll";
 // three.js is by far the heaviest dependency; keep it out of the main bundle
 // so the page becomes interactive before the starfield loads.
 const Hero3D = lazy(() => import("./Hero3D"));
+const RoverStrip = lazy(() => import("./rover/RoverStrip"));
 
 const Hero = () => {
   const years =
@@ -42,6 +43,11 @@ const Hero = () => {
         aria-hidden="true"
         className="pointer-events-none absolute -top-48 right-[-12%] h-[36rem] w-[36rem] rounded-full bg-blue-500/[0.07] blur-3xl dark:bg-blue-400/[0.08]"
       />
+
+      {/* Drivable/flyable moon rover toy over a lunar strip at the hero's bottom */}
+      <Suspense fallback={null}>
+        <RoverStrip />
+      </Suspense>
 
       <div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-4xl py-28 sm:py-32">
