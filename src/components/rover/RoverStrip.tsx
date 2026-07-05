@@ -306,76 +306,86 @@ const RoverStrip = () => {
     "pointer-events-auto flex h-11 w-11 select-none items-center justify-center rounded-full border border-gray-900/15 bg-gray-900/5 text-gray-600 backdrop-blur-sm active:bg-gray-900/15 dark:border-white/15 dark:bg-white/5 dark:text-gray-300 dark:active:bg-white/15";
 
   return (
-    <div
-      ref={containerRef}
-      aria-hidden="true"
-      className="pointer-events-none absolute inset-0 z-[1]"
-    >
-      <canvas ref={canvasRef} className="block h-full w-full" />
+    <>
+      <div
+        ref={containerRef}
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 z-[1]"
+      >
+        <canvas ref={canvasRef} className="block h-full w-full" />
+      </div>
 
+      {/* Controls live in their own layer above the hero content (z-10) —
+          on small screens the content column overlaps the bottom strip and
+          would otherwise swallow the taps. */}
       {!prefersReducedMotion && (
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: hintVisible ? 1 : 0 }}
-          transition={{ duration: 0.6, delay: hintVisible ? 1.2 : 0 }}
-          className="absolute bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap text-[11px] tracking-wide text-gray-500/80 dark:text-blue-100/40"
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 bottom-0 z-20"
         >
-          {coarsePointer ? "◀ ▶ drive · hold ▲ to fly" : "← → drive · hold ↑ to fly"}
-        </motion.p>
-      )}
-
-      {coarsePointer && !prefersReducedMotion && (
-        <div className="absolute inset-x-0 bottom-3 flex items-end justify-between px-5">
-          <div className="flex gap-3">
-            <button
-              type="button"
-              tabIndex={-1}
-              className={buttonClass}
-              style={{ touchAction: "manipulation" }}
-              onPointerDown={(ev) => {
-                ev.preventDefault();
-                press("left");
-              }}
-              onPointerUp={() => release("left")}
-              onPointerCancel={() => release("left")}
-              onPointerLeave={() => release("left")}
-            >
-              <ChevronLeft size={20} />
-            </button>
-            <button
-              type="button"
-              tabIndex={-1}
-              className={buttonClass}
-              style={{ touchAction: "manipulation" }}
-              onPointerDown={(ev) => {
-                ev.preventDefault();
-                press("right");
-              }}
-              onPointerUp={() => release("right")}
-              onPointerCancel={() => release("right")}
-              onPointerLeave={() => release("right")}
-            >
-              <ChevronRight size={20} />
-            </button>
-          </div>
-          <button
-            type="button"
-            tabIndex={-1}
-            className={buttonClass}
-            style={{ touchAction: "manipulation" }}
-            onPointerDown={(ev) => {
-              ev.preventDefault();
-              press("thrust");
-            }}
-            onPointerUp={() => release("thrust")}
-            onPointerCancel={() => release("thrust")}
-            onPointerLeave={() => release("thrust")}
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: hintVisible ? 1 : 0 }}
+            transition={{ duration: 0.6, delay: hintVisible ? 1.2 : 0 }}
+            className="absolute bottom-2 left-1/2 -translate-x-1/2 whitespace-nowrap text-[11px] tracking-wide text-gray-500/80 dark:text-blue-100/40"
           >
-            <ArrowUp size={20} />
-          </button>
+            {coarsePointer ? "◀ ▶ drive · hold ▲ to fly" : "← → drive · hold ↑ to fly"}
+          </motion.p>
+
+          {coarsePointer && (
+            <div className="absolute inset-x-0 bottom-3 flex items-end justify-between px-5">
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  className={buttonClass}
+                  style={{ touchAction: "manipulation" }}
+                  onPointerDown={(ev) => {
+                    ev.preventDefault();
+                    press("left");
+                  }}
+                  onPointerUp={() => release("left")}
+                  onPointerCancel={() => release("left")}
+                  onPointerLeave={() => release("left")}
+                >
+                  <ChevronLeft size={20} />
+                </button>
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  className={buttonClass}
+                  style={{ touchAction: "manipulation" }}
+                  onPointerDown={(ev) => {
+                    ev.preventDefault();
+                    press("right");
+                  }}
+                  onPointerUp={() => release("right")}
+                  onPointerCancel={() => release("right")}
+                  onPointerLeave={() => release("right")}
+                >
+                  <ChevronRight size={20} />
+                </button>
+              </div>
+              <button
+                type="button"
+                tabIndex={-1}
+                className={buttonClass}
+                style={{ touchAction: "manipulation" }}
+                onPointerDown={(ev) => {
+                  ev.preventDefault();
+                  press("thrust");
+                }}
+                onPointerUp={() => release("thrust")}
+                onPointerCancel={() => release("thrust")}
+                onPointerLeave={() => release("thrust")}
+              >
+                <ArrowUp size={20} />
+              </button>
+            </div>
+          )}
         </div>
       )}
-    </div>
+    </>
   );
 };
 
