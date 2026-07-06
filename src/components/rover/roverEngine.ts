@@ -11,6 +11,8 @@ export type Terrain = {
   slopeAt: (x: number) => number;
 };
 
+export type RoverLevel = 0 | 1 | 2 | 3 | 4;
+
 export type RoverState = {
   x: number;
   vx: number;
@@ -22,12 +24,21 @@ export type RoverState = {
   facing: 1 | -1;
   dustTimer: number;
   thrusting: boolean;
+  downThrusting: boolean;
+  level: RoverLevel;
+  // Set true when the rover is spawned above the canvas so the CEILING
+  // clamp doesn't snap it back into view before it can fall in. Cleared
+  // on the first ground contact; the ceiling behaves normally afterward.
+  spawnFall: boolean;
 };
 
 export type RoverInput = {
   left: boolean;
   right: boolean;
   thrust: boolean;
+  // Downward thrust — only respected at level 4 (Nova). Held ArrowDown
+  // still gets preventDefault'd at every level so the page can't scroll.
+  down: boolean;
 };
 
 export type Particle = {
@@ -78,6 +89,21 @@ export const WHEEL_BASE = 26;
 export const WHEEL_RADIUS = 5;
 export const RIDE_HEIGHT = 13;
 
+// Temporary-booster multipliers unlocked by shattering stars — kept gentle
+// (peak 1.5x) so the rover never rockets so fast the eye can't follow.
+const LEVEL_MULT: Array<{
+  accel: number;
+  thrust: number;
+  maxV: number;
+  maxVy: number;
+}> = [
+  { accel: 1.0, thrust: 1.0, maxV: 1.0, maxVy: 1.0 },
+  { accel: 1.12, thrust: 1.1, maxV: 1.1, maxVy: 1.05 },
+  { accel: 1.24, thrust: 1.2, maxV: 1.2, maxVy: 1.1 },
+  { accel: 1.36, thrust: 1.3, maxV: 1.3, maxVy: 1.15 },
+  { accel: 1.5, thrust: 1.4, maxV: 1.4, maxVy: 1.2 },
+];
+
 // Fixed phases and crater placements keep the terrain deterministic; the
 // integer sine frequencies make it tile seamlessly so the rover can wrap.
 const CRATERS = [
@@ -118,19 +144,26 @@ export function createTerrain(
   return { width, height, stripTop, stripHeight, heightAt, slopeAt };
 }
 
-export function createRoverState(terrain: Terrain): RoverState {
+export function createRoverState(
+  terrain: Terrain,
+  spawn: "ground" | "sky" = "ground",
+): RoverState {
   const x = terrain.width * 0.3;
+  const airborne = spawn === "sky";
   return {
     x,
     vx: 0,
-    y: terrain.heightAt(x) - RIDE_HEIGHT,
+    y: airborne ? -20 : terrain.heightAt(x) - RIDE_HEIGHT,
     vy: 0,
-    onGround: true,
+    onGround: !airborne,
     tilt: 0,
     squash: 0,
     facing: 1,
     dustTimer: 0,
     thrusting: false,
+    downThrusting: false,
+    level: 0,
+    spawnFall: airborne,
   };
 }
 
@@ -185,12 +218,18 @@ export function stepRover(
   particles: Particle[],
   dt: number,
 ) {
+  const mult = LEVEL_MULT[state.level] ?? LEVEL_MULT[0];
+  const accel = ACCEL * mult.accel;
+  const thrust = THRUST * mult.thrust;
+  const maxV = MAX_V * mult.maxV;
+  const maxVy = MAX_VY * mult.maxVy;
+
   if (input.left) {
-    state.vx -= ACCEL * dt;
+    state.vx -= accel * dt;
     state.facing = -1;
   }
   if (input.right) {
-    state.vx += ACCEL * dt;
+    state.vx += accel * dt;
     state.facing = 1;
   }
 
@@ -209,7 +248,7 @@ export function stepRover(
         : ROLL_FRICTION
       : AIR_FRICTION;
   state.vx *= Math.exp(-friction * dt);
-  state.vx = Math.max(-MAX_V, Math.min(MAX_V, state.vx));
+  state.vx = Math.max(-maxV, Math.min(maxV, state.vx));
   if (Math.abs(state.vx) < 0.5 && !driving && Math.abs(grade) < FLAT_GRADE) {
     state.vx = 0;
   }
@@ -222,7 +261,12 @@ export function stepRover(
   const groundY = (rearY + frontY) / 2 - RIDE_HEIGHT;
   const targetTilt = Math.atan2(frontY - rearY, WHEEL_BASE);
 
+  // Down thrust is a Nova-only trick; up thrust always wins if both keys
+  // are held so the rover never fights itself in mid-air.
+  const downActive =
+    input.down && state.level === 4 && !input.thrust && !state.onGround;
   state.thrusting = input.thrust;
+  state.downThrusting = downActive;
 
   if (input.thrust) {
     if (state.onGround) {
@@ -231,7 +275,7 @@ export function stepRover(
       state.dustTimer = 0;
       burst(particles, state.x, state.y + RIDE_HEIGHT, 4, 60);
     }
-    state.vy -= THRUST * dt;
+    state.vy -= thrust * dt;
 
     // Exhaust puffs streaming out below the rocket flame.
     state.dustTimer -= dt;
@@ -246,6 +290,22 @@ export function stepRover(
         "exhaust",
       );
     }
+  } else if (downActive) {
+    // Gentle downward burn: half-strength jet with exhaust venting *up*
+    // from the top of the rover.
+    state.vy += thrust * 0.55 * dt;
+    state.dustTimer -= dt;
+    while (state.dustTimer < 0) {
+      state.dustTimer += 1 / 40;
+      spawnParticle(
+        particles,
+        state.x + (Math.random() - 0.5) * 5,
+        state.y - 14,
+        -state.vx * 0.15 + (Math.random() - 0.5) * 40,
+        -(70 + Math.random() * 50),
+        "exhaust",
+      );
+    }
   }
 
   if (state.onGround) {
@@ -254,7 +314,7 @@ export function stepRover(
 
     // Rolling dust kicked up behind the wheels.
     if (Math.abs(state.vx) > 50) {
-      const rate = 12 + (Math.abs(state.vx) / MAX_V) * 24;
+      const rate = 12 + (Math.abs(state.vx) / maxV) * 24;
       state.dustTimer -= dt;
       while (state.dustTimer < 0) {
         state.dustTimer += 1 / rate;
@@ -272,10 +332,12 @@ export function stepRover(
     }
   } else {
     state.vy += (input.thrust ? FLY_GRAVITY : FALL_GRAVITY) * dt;
-    state.vy = Math.max(-MAX_VY, Math.min(MAX_VY, state.vy));
+    state.vy = Math.max(-maxVy, Math.min(maxVy, state.vy));
     state.y += state.vy * dt;
 
-    if (state.y < CEILING) {
+    // Ceiling clamp is disabled during the intro spawn-fall so the rover
+    // can genuinely drop in from off-screen; it re-arms on first landing.
+    if (!state.spawnFall && state.y < CEILING) {
       state.y = CEILING;
       state.vy = Math.max(state.vy, 0);
     }
@@ -283,6 +345,7 @@ export function stepRover(
       state.y = groundY;
       const impact = state.vy;
       state.squash = Math.min(1, impact / 250);
+      state.spawnFall = false;
       if (impact > BOUNCE_MIN_IMPACT && !input.thrust) {
         // Low gravity: a hard landing rebounds a few decaying bounces.
         state.vy = -impact * BOUNCE_RESTITUTION;
@@ -296,7 +359,7 @@ export function stepRover(
       }
     } else {
       // Lean into the direction of travel while airborne.
-      const lean = Math.max(-1, Math.min(1, state.vx / MAX_V)) * 0.22;
+      const lean = Math.max(-1, Math.min(1, state.vx / maxV)) * 0.22;
       state.tilt += (lean - state.tilt) * Math.min(1, 5 * dt);
     }
   }
@@ -327,7 +390,9 @@ export function isRoverIdle(
     !input.left &&
     !input.right &&
     !input.thrust &&
+    !input.down &&
     !state.thrusting &&
+    !state.downThrusting &&
     state.onGround &&
     state.vx === 0 &&
     state.squash === 0 &&
@@ -417,22 +482,53 @@ function drawRoverBody(
     1 - 0.25 * state.squash,
   );
 
-  const wheelY = RIDE_HEIGHT - WHEEL_RADIUS;
-  const wheelAngle = (state.x / WHEEL_RADIUS) * state.facing;
+  const level = state.level;
+  const now = performance.now();
+
+  // Level 4 halo: soft aurora sitting *behind* everything else, so the body
+  // sits inside a warm glow rather than obscuring the pulse.
+  if (level === 4) {
+    const pulse = 0.55 + 0.45 * Math.sin(now * 0.006);
+    const halo = ctx.createRadialGradient(0, -3, 3, 0, -3, 30);
+    halo.addColorStop(0, `rgba(251,191,36,${0.5 * pulse})`);
+    halo.addColorStop(0.55, `rgba(59,130,246,${0.25 * pulse})`);
+    halo.addColorStop(1, "rgba(59,130,246,0)");
+    ctx.fillStyle = halo;
+    ctx.fillRect(-34, -34, 68, 46);
+  }
 
   // Rocket flame under the body while thrusting: a flickering gradient
-  // teardrop, drawn first so the body and wheels sit on top of it.
+  // teardrop, drawn first so the body and wheels sit on top of it. Higher
+  // levels stretch it a little longer and tint it a hair brighter.
   if (state.thrusting) {
-    const len = 12 + Math.random() * 6;
+    const boost = 1 + level * 0.12;
+    const len = (12 + Math.random() * 6) * boost;
     const flame = ctx.createLinearGradient(0, 5, 0, 5 + len);
+    const outer = level >= 3 ? "rgba(56,189,248,0.7)" : "rgba(251,146,60,0.8)";
     flame.addColorStop(0, "rgba(254,243,199,0.95)");
-    flame.addColorStop(0.45, "rgba(251,146,60,0.8)");
+    flame.addColorStop(0.45, outer);
     flame.addColorStop(1, "rgba(251,146,60,0)");
     ctx.fillStyle = flame;
     ctx.beginPath();
     ctx.moveTo(-4, 5);
     ctx.quadraticCurveTo(-3, 5 + len * 0.6, 0, 5 + len);
     ctx.quadraticCurveTo(3, 5 + len * 0.6, 4, 5);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Nova-only downward jet: a smaller upward-shooting flame from the top.
+  if (state.downThrusting) {
+    const len = 8 + Math.random() * 4;
+    const jet = ctx.createLinearGradient(0, -20, 0, -20 - len);
+    jet.addColorStop(0, "rgba(254,243,199,0.9)");
+    jet.addColorStop(0.5, "rgba(251,146,60,0.65)");
+    jet.addColorStop(1, "rgba(251,146,60,0)");
+    ctx.fillStyle = jet;
+    ctx.beginPath();
+    ctx.moveTo(-3, -20);
+    ctx.quadraticCurveTo(0, -20 - len * 0.6, 0, -20 - len);
+    ctx.quadraticCurveTo(0, -20 - len * 0.6, 3, -20);
     ctx.closePath();
     ctx.fill();
   }
@@ -450,6 +546,26 @@ function drawRoverBody(
     ctx.fill();
   }
 
+  // Vanguard side fins — wide little triangles that peek out past the body.
+  if (level >= 3) {
+    ctx.fillStyle = palette.body;
+    ctx.beginPath();
+    ctx.moveTo(-16, -6);
+    ctx.lineTo(-22, -3);
+    ctx.lineTo(-16, -1);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(16, -6);
+    ctx.lineTo(22, -3);
+    ctx.lineTo(16, -1);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  const wheelY = RIDE_HEIGHT - WHEEL_RADIUS;
+  const wheelAngle = (state.x / WHEEL_RADIUS) * state.facing;
+
   // Struts
   ctx.strokeStyle = palette.wheel;
   ctx.lineWidth = 2;
@@ -466,6 +582,14 @@ function drawRoverBody(
     ctx.beginPath();
     ctx.arc(wx, wheelY, WHEEL_RADIUS, 0, TAU);
     ctx.fill();
+    // Ranger onward gains a bright rim highlight.
+    if (level >= 2) {
+      ctx.strokeStyle = "rgba(251,191,36,0.6)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(wx, wheelY, WHEEL_RADIUS + 0.4, 0, TAU);
+      ctx.stroke();
+    }
     ctx.strokeStyle = palette.body;
     ctx.lineWidth = 1.2;
     ctx.beginPath();
@@ -483,11 +607,47 @@ function drawRoverBody(
   ctx.roundRect(-16, -8, 32, 12, 4);
   ctx.fill();
 
+  // Nova racing stripe pulsing across the hull.
+  if (level === 4) {
+    const stripePulse = 0.55 + 0.45 * Math.sin(now * 0.006 + 1.2);
+    ctx.fillStyle = `rgba(56,189,248,${stripePulse})`;
+    ctx.fillRect(-14, -5, 28, 1.4);
+  }
+
   // Solar panel
   ctx.fillStyle = palette.accent;
   ctx.beginPath();
   ctx.roundRect(-11, -12, 15, 4, 1.5);
   ctx.fill();
+
+  // Ranger onward: a second stacked solar panel above the first.
+  if (level >= 2) {
+    ctx.fillStyle = palette.accent;
+    ctx.globalAlpha = 0.75;
+    ctx.beginPath();
+    ctx.roundRect(-9, -17, 12, 3, 1.2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    // Amber forward headlamp — a tiny always-on bulb.
+    ctx.fillStyle = "rgba(254,240,138,0.9)";
+    ctx.beginPath();
+    ctx.arc(15, -4, 1.4, 0, TAU);
+    ctx.fill();
+  }
+
+  // Vanguard radar dish tucked behind the mast.
+  if (level >= 3) {
+    ctx.fillStyle = palette.body;
+    ctx.beginPath();
+    ctx.arc(-9, -13, 2.6, Math.PI, TAU);
+    ctx.fill();
+    ctx.strokeStyle = palette.accent;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(-9, -13);
+    ctx.lineTo(-9, -17);
+    ctx.stroke();
+  }
 
   // Camera mast
   ctx.strokeStyle = palette.body;
@@ -502,6 +662,15 @@ function drawRoverBody(
   ctx.fill();
   ctx.fillStyle = palette.accent;
   ctx.fillRect(10, -19, 1.6, 3);
+
+  // Scout blinking green nav LED on top of the mast.
+  if (level >= 1) {
+    const blink = 0.55 + 0.45 * Math.sin(now * 0.008);
+    ctx.fillStyle = `rgba(74,222,128,${blink})`;
+    ctx.beginPath();
+    ctx.arc(8, -22, 1.4, 0, TAU);
+    ctx.fill();
+  }
 
   ctx.restore();
 }

@@ -71,7 +71,9 @@ type NdcRef = React.RefObject<{
   active: boolean;
   speed: number;
 }>;
-type ClickQueueRef = React.RefObject<{ x: number; y: number }[]>;
+type ClickQueueRef = React.RefObject<
+  { x: number; y: number; clientX: number; clientY: number }[]
+>;
 type BurstQueueRef = React.RefObject<{ x: number; y: number; z: number }[]>;
 
 function StarLayer({
@@ -200,6 +202,7 @@ function InteractiveStars({
     // screen angle so depth doesn't skew which star "under the cursor" wins.
     while (clickQueue.current.length > 0) {
       const click = clickQueue.current.shift()!;
+      const { clientX, clientY } = click;
       setLocalRay(click.x, click.y);
 
       let bestLayer = -1;
@@ -249,6 +252,14 @@ function InteractiveStars({
       runtime.offsets[b3 + 1] = 0;
       runtime.offsets[b3 + 2] = 0;
       burstQueue.current.push({ x: sx, y: sy, z: sz });
+
+      // Let the rover HUD know a star was actually destroyed (and where,
+      // in screen coords, so it can pop the congrats bubble at the cursor).
+      window.dispatchEvent(
+        new CustomEvent("rover:starShatter", {
+          detail: { clientX, clientY },
+        }),
+      );
 
       // Shockwave: ripple neighbors in both layers outward.
       const waveSq = SHATTER_WAVE_RADIUS * SHATTER_WAVE_RADIUS;
@@ -557,22 +568,29 @@ function Drift({
 
   useFrame((state) => {
     if (!groupRef.current) return;
-    // Slow bounded sway instead of endless accumulation — an ever-growing
-    // rotation eventually turns the star slab edge-on and empties one side
-    // of the screen.
-    const sway = Math.sin(state.clock.elapsedTime * 0.05) * 0.06;
+    // Slow continuous ambient drift: two out-of-phase sines keep the field
+    // visibly moving without ever landing on a still frame. Bounded (unlike
+    // the original endless accumulation) so the star slab can never rotate
+    // edge-on and empty one side of the sky. Peak angular speed ≈0.013 rad/s
+    // — a hair slower than the original 0.02.
+    const t = state.clock.elapsedTime;
+    const swayY =
+      Math.sin(t * 0.03) * 0.35 + Math.sin(t * 0.017 + 1.3) * 0.12;
+    const swayX = Math.sin(t * 0.022 + 2.1) * 0.10;
 
     const pointer = pointerNdc.current;
     // Normalized pointer (-1 to 1) steers a gentle parallax; three.js NDC has
     // y up, the old parallax expected y down, hence the negation.
-    const targetX = pointer.active ? -pointer.y : 0;
-    const targetY = pointer.active ? pointer.x : 0;
+    const targetX = swayX + (pointer.active ? -pointer.y * 0.08 : 0);
+    const targetY = swayY + (pointer.active ? pointer.x * 0.08 : 0);
 
-    const smoothFactor = 0.008;
+    // Small first-order lag: enough to smooth the pointer parallax without
+    // muffling the ambient sway (its period is 200s+ so the lag barely bites).
+    const smoothFactor = 0.02;
     currentRotation.current.x +=
-      (targetX * 0.08 - currentRotation.current.x) * smoothFactor;
+      (targetX - currentRotation.current.x) * smoothFactor;
     currentRotation.current.y +=
-      (sway + targetY * 0.08 - currentRotation.current.y) * smoothFactor;
+      (targetY - currentRotation.current.y) * smoothFactor;
 
     groupRef.current.rotation.x = currentRotation.current.x;
     groupRef.current.rotation.y = currentRotation.current.y;
@@ -661,11 +679,19 @@ const Hero3D = () => {
 
     // Clicks on the hero background shatter the star under the cursor;
     // clicks that land on real controls (links, buttons) are left alone.
+    // The client coords ride along so the RoverStrip HUD can pop its
+    // congrats bubble right at the cursor when a hit lands.
     const section = container.closest("section");
     const handleClick = (event: MouseEvent) => {
       if (prefersReducedMotion) return;
       if ((event.target as HTMLElement).closest("a, button")) return;
-      clickQueue.current.push(toNdc(event.clientX, event.clientY));
+      const ndc = toNdc(event.clientX, event.clientY);
+      clickQueue.current.push({
+        x: ndc.x,
+        y: ndc.y,
+        clientX: event.clientX,
+        clientY: event.clientY,
+      });
     };
 
     section?.addEventListener("click", handleClick);
